@@ -1,0 +1,79 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Endpoint {
+  id              String             @id @default(uuid())
+  name            String
+  url             String
+  description     String?
+  secretKey       String
+  rateLimitPerMin Int                @default(60)
+  timeoutMs       Int                @default(5000)
+  maxRetries      Int                @default(5)
+  status          String             @default("ACTIVE") // ACTIVE, INACTIVE, PAUSED
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  events          WebhookEvent[]
+  deadLetterEvents DeadLetterQueue[]
+
+  @@index([status])
+}
+
+model WebhookEvent {
+  id          String            @id @default(uuid())
+  endpointId  String
+  payload     String            // JSON payload
+  headers     String?           // JSON headers
+  eventType   String            @default("default")
+  status      String            @default("PENDING") // PENDING, PROCESSING, DELIVERED, FAILED, EXHAUSTED
+  retryCount  Int               @default(0)
+  nextRetryAt DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  endpoint    Endpoint          @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+  attempts    DeliveryAttempt[]
+  dlqRecord   DeadLetterQueue?
+
+  @@index([endpointId])
+  @@index([status])
+  @@index([nextRetryAt])
+}
+
+model DeliveryAttempt {
+  id              String        @id @default(uuid())
+  eventId         String
+  endpointId      String
+  responseStatus  Int?
+  responseBody    String?
+  executionTimeMs Int           @default(0)
+  status          String        // SUCCESS, FAILED, TIMEOUT
+  errorMessage    String?
+  attemptNumber   Int           @default(1)
+  createdAt       DateTime      @default(now())
+
+  event           WebhookEvent  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([endpointId])
+}
+
+model DeadLetterQueue {
+  id          String        @id @default(uuid())
+  eventId     String        @unique
+  endpointId  String
+  reason      String
+  archivedAt  DateTime      @default(now())
+
+  event       WebhookEvent  @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  endpoint    Endpoint      @relation(fields: [endpointId], references: [id], onDelete: Cascade)
+
+  @@index([endpointId])
+}
