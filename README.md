@@ -11,6 +11,7 @@ HookSentry, Stripe, Shopify, GitHub ve özel webhook sağlayıcılarından gelen
 - **🔒 SSRF Kalkanı & Güvenlik:** `127.0.0.1`, RFC 1918 özel IP'ler ve AWS/GCP `169.254.169.254` instance metadata adreslerine karşı iç ağ taraması kalkanı.
 - **🔑 Timing-Safe HMAC Doğrulaması:** Zamanlama saldırılarını (timing attack) önleyen `crypto.timingSafeEqual` destekli HMAC-SHA256 imza doğrulayıcı.
 - **🔄 Üstel Geri Çekilme (Exponential Backoff with Full Jitter):** Hedef sunucu hata verdiğinde (5xx, timeout) üstel aralıklarla otomatik yeniden deneme döngüsü.
+- **⏰ Otomatik Retry Worker (Cron API):** `/api/v1/cron/retry` endpoint'i ile süresi gelmiş başarısız webhook'ları arka planda otomatik yeniden fırlatma.
 - **🛑 Dead-Letter Queue (DLQ):** Belirlenen deneme sınırı aşıldığında başarısız webhook'ları karantinaya alma ve tek tıkla **Replay (Yeniden Gönderme)** imkânı.
 - **📊 Canlı Dashboard & Metrikler:** Aktif endpoint'ler, teslimat başarı oranları, yanıt gecikmesi (ms) ve ham JSON payload inceleyicisi.
 - **🩺 Sağlık Kontrolü (Healthcheck):** `/api/health` üzerinden veritabanı gecikmesi ve sistem durum izleme.
